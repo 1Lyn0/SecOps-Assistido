@@ -1,0 +1,21 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual environment (directory and symlink)
+.venv
+.venv/
+venv/
+env/
+
+# Databases
+*.db
+*.sqlite3
+data/secops.db
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
