@@ -12,6 +12,8 @@ env/
 
 # Databases
 *.db
+*.db-shm
+*.db-wal
 *.sqlite3
 data/secops.db
 
