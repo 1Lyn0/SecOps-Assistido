@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     ollama_model: str = "llama3.2"
     api_base_url: str = "http://localhost:8000"
 
+    # Configurações de Detectores
+    zscore_threshold: float = 3.0
+    iforest_contamination: float = 0.05
+    iforest_n_estimators: int = 100
+    iforest_random_state: int = 42
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
