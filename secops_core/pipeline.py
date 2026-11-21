@@ -4,7 +4,7 @@ import argparse
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from secops_core.db import save_anomalies, update_anomaly_explanation
+from secops_core.db import bulk_insert, save_anomalies, update_anomaly_explanation
 from secops_core.detectors.engine import ConsolidatedAnomaly, DetectionEngine
 from secops_core.explainer.llm_explainer import LLMExplainer
 from secops_core.lgms import extract_features, parse_logs_file
@@ -72,9 +72,87 @@ def run_pipeline(
                 # Anexa temporariamente no objeto consolidado
                 setattr(anom, "explanation", laudo)
 
-    # 6. Persistência no Banco SQLite
+    # 6. Persistência no Banco SQLite (Logs Processados e Alertas Consolidados)
     saved_count = 0
     if save_to_db:
+        # Prepara mapeamento das anomalias consolidadas por event_id
+        anom_map: Dict[str, ConsolidatedAnomaly] = {a.event_id: a for a in consolidated_anomalies}
+
+        # Constrói registros enriquecidos para todos os logs ingeridos
+        all_processed_records: List[Dict[str, Any]] = []
+        for log in logs:
+            anom = anom_map.get(log.event_id)
+            is_anom = anom is not None
+
+            zscore_val = 0.0
+            is_zscore = False
+            iforest_val = 0.0
+            is_iforest = False
+            rules_triggered: List[str] = []
+
+            if is_anom:
+                for r in anom.detector_results:
+                    dname = r.detector_name
+                    if "ZScore" in dname:
+                        zscore_val = float(r.anomaly_score)
+                        is_zscore = True
+                    elif "IsolationForest" in dname:
+                        iforest_val = float(r.anomaly_score)
+                        is_iforest = True
+                    elif "Rule" in dname or "CloudTrail" in dname:
+                        rules_triggered.extend(r.details.get("rule_codes", [r.scenario or dname]))
+
+                all_processed_records.append({
+                    "event_id": log.event_id,
+                    "timestamp": str(log.timestamp),
+                    "event_name": log.event_name,
+                    "event_source": log.event_source,
+                    "user_name": log.user_identity.userName,
+                    "user_arn": log.user_identity.arn,
+                    "source_ip": log.source_ip,
+                    "aws_region": log.aws_region,
+                    "status": log.status,
+                    "error_code": log.error_code,
+                    "request_count": log.request_count,
+                    "bytes_transferred": log.bytes_transferred,
+                    "metadata": log.metadata,
+                    "zscore_value": zscore_val,
+                    "is_zscore_anomaly": is_zscore,
+                    "iforest_score": iforest_val,
+                    "is_iforest_anomaly": is_iforest,
+                    "cloudtrail_rules_triggered": list(set(rules_triggered)),
+                    "final_severity": anom.max_severity,
+                    "is_anomaly": True,
+                    "ai_explanation": getattr(anom, "explanation", None),
+                })
+            else:
+                all_processed_records.append({
+                    "event_id": log.event_id,
+                    "timestamp": str(log.timestamp),
+                    "event_name": log.event_name,
+                    "event_source": log.event_source,
+                    "user_name": log.user_identity.userName,
+                    "user_arn": log.user_identity.arn,
+                    "source_ip": log.source_ip,
+                    "aws_region": log.aws_region,
+                    "status": log.status,
+                    "error_code": log.error_code,
+                    "request_count": log.request_count,
+                    "bytes_transferred": log.bytes_transferred,
+                    "metadata": log.metadata,
+                    "zscore_value": 0.0,
+                    "is_zscore_anomaly": False,
+                    "iforest_score": 0.0,
+                    "is_iforest_anomaly": False,
+                    "cloudtrail_rules_triggered": [],
+                    "final_severity": "LOW",
+                    "is_anomaly": False,
+                    "ai_explanation": None,
+                })
+
+        # Insere todos os logs na tabela processed_logs
+        bulk_insert(all_processed_records)
+        # Salva anomalias consolidadas na tabela anomalies
         saved_count = save_anomalies(consolidated_anomalies)
 
     # Distribuição de severidade
@@ -101,6 +179,7 @@ def main() -> None:
     parser.add_argument("--file", type=str, default="data/logs_simulados.jsonl", help="Caminho do arquivo JSONL")
     parser.add_argument("--explain", action="store_true", help="Gera laudos explicativos para eventos críticos")
     parser.add_argument("--no-db", action="store_true", help="Não grava os resultados no SQLite")
+    parser.add_argument("--output", type=str, default=None, help="Caminho para exportar o sumário JSON do resultado")
 
     args = parser.parse_args()
 
@@ -110,6 +189,13 @@ def main() -> None:
         save_to_db=not args.no_db,
         explain_critical=args.explain,
     )
+
+    if args.output:
+        import json
+        with open(args.output, "w", encoding="utf-8") as f:
+            clean_res = {k: v for k, v in res.items() if k != "anomalies"}
+            json.dump(clean_res, f, indent=2, ensure_ascii=False)
+        print(f"📄 Resultado exportado para: {args.output}")
 
     print("\n✅ Pipeline concluído com sucesso!")
     print(f"   Logs processados:       {res['valid_logs']}")

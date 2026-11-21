@@ -21,6 +21,7 @@ class ConsolidatedAnomaly(BaseModel):
     max_severity: str
     scenario: Optional[str] = None
     explanation: Optional[str] = None
+    technical_justification: Optional[str] = None
     detector_results: List[AnomalyResult] = Field(default_factory=list)
 
 
@@ -46,6 +47,37 @@ class DetectionEngine:
             results = detector.detect(df)
             all_results.extend(results)
         return all_results
+
+    def _build_technical_justification(
+        self, items: List[AnomalyResult], final_severity: str
+    ) -> str:
+        """Constrói justificativa técnica estruturada com base nas evidências dos detectores."""
+        reasons = []
+        for it in items:
+            d_name = it.detector_name
+            details = it.details or {}
+            if "triggered_metrics" in details:
+                metrics_desc = ", ".join(
+                    [f"{k} (z={v.get('z_score', 0)})" for k, v in details["triggered_metrics"].items()]
+                )
+                reasons.append(f"{d_name}: métrica(s) volumétrica(s) {metrics_desc}")
+            elif "rule_codes" in details or "primary_rule" in details:
+                rule_name = details.get("primary_rule") or details.get("rule_codes", ["Regra"])[0]
+                tech_reason = details.get("technical_reason", "Violação de política CloudTrail")
+                reasons.append(f"{d_name}: disparou {rule_name} ({tech_reason})")
+            elif "top_features" in details:
+                feats = ", ".join([f"{k}={v}" for k, v in list(details["top_features"].items())[:3]])
+                reasons.append(f"{d_name}: anomalia multivariada com score {it.anomaly_score} (features: {feats})")
+            else:
+                reasons.append(f"{d_name}: anomalia detectada com score {it.anomaly_score}")
+
+        justification = (
+            f"Consolidação de evidências ({final_severity}): "
+            + "; ".join(reasons)
+        )
+        if len(items) >= 2:
+            justification += ". Consenso multi-detector: severidade combinada elevada."
+        return justification
 
     def run_and_consolidate(self, df: pd.DataFrame) -> List[ConsolidatedAnomaly]:
         """Executa todos os detectores e agrupa as anomalias por event_id unificado."""
@@ -76,6 +108,7 @@ class DetectionEngine:
                 max_sev = "HIGH"
 
             scenario = next((it.scenario for it in items if it.scenario), None)
+            technical_justification = self._build_technical_justification(items, max_sev)
 
             consolidated.append(
                 ConsolidatedAnomaly(
@@ -88,6 +121,7 @@ class DetectionEngine:
                     max_score=round(max_score, 4),
                     max_severity=max_sev,
                     scenario=scenario,
+                    technical_justification=technical_justification,
                     detector_results=items,
                 )
             )

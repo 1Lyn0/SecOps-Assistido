@@ -351,9 +351,97 @@ def _parse_row_dict(row: sqlite3.Row) -> Dict[str, Any]:
     return d
 
 
+def _build_processed_logs_where(
+    is_anomaly: Optional[bool] = None,
+    final_severity: Optional[str] = None,
+    event_name: Optional[str] = None,
+    user_name: Optional[str] = None,
+    source_ip: Optional[str] = None,
+    detector_type: Optional[str] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+) -> Tuple[str, List[Any]]:
+    """Constrói dinamicamente cláusula WHERE e parâmetros para consultas em processed_logs."""
+    query = ""
+    params: List[Any] = []
+
+    if is_anomaly is not None:
+        query += " AND is_anomaly = ?"
+        params.append(1 if is_anomaly else 0)
+
+    if final_severity:
+        query += " AND final_severity = ?"
+        params.append(final_severity.upper())
+
+    if event_name:
+        query += " AND event_name LIKE ?"
+        params.append(f"%{event_name}%")
+
+    if user_name:
+        query += " AND user_name LIKE ?"
+        params.append(f"%{user_name}%")
+
+    if source_ip:
+        query += " AND source_ip LIKE ?"
+        params.append(f"%{source_ip}%")
+
+    if detector_type:
+        d_lower = detector_type.lower()
+        if "zscore" in d_lower or "z_score" in d_lower:
+            query += " AND is_zscore_anomaly = 1"
+        elif "iforest" in d_lower or "isolation" in d_lower:
+            query += " AND is_iforest_anomaly = 1"
+        elif "rule" in d_lower or "cloudtrail" in d_lower:
+            query += " AND cloudtrail_rules_triggered != '[]' AND cloudtrail_rules_triggered IS NOT NULL"
+
+    if start_time:
+        query += " AND timestamp >= ?"
+        params.append(start_time)
+
+    if end_time:
+        query += " AND timestamp <= ?"
+        params.append(end_time)
+
+    return query, params
+
+
+def count_processed_logs(
+    is_anomaly: Optional[bool] = None,
+    final_severity: Optional[str] = None,
+    event_name: Optional[str] = None,
+    user_name: Optional[str] = None,
+    source_ip: Optional[str] = None,
+    detector_type: Optional[str] = None,
+    start_time: Optional[str] = None,
+    end_time: Optional[str] = None,
+    db_path: Optional[Union[str, Path]] = None,
+) -> int:
+    """Retorna a contagem total de registros em processed_logs que atendem aos filtros."""
+    init_db(db_path)
+    where_sql, params = _build_processed_logs_where(
+        is_anomaly=is_anomaly,
+        final_severity=final_severity,
+        event_name=event_name,
+        user_name=user_name,
+        source_ip=source_ip,
+        detector_type=detector_type,
+        start_time=start_time,
+        end_time=end_time,
+    )
+    query = f"SELECT COUNT(*) AS total FROM processed_logs WHERE 1=1{where_sql}"
+    with get_connection(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        return int(cursor.fetchone()["total"])
+
+
 def get_processed_logs(
     is_anomaly: Optional[bool] = None,
     final_severity: Optional[str] = None,
+    event_name: Optional[str] = None,
+    user_name: Optional[str] = None,
+    source_ip: Optional[str] = None,
+    detector_type: Optional[str] = None,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
     limit: int = 100,
@@ -365,31 +453,23 @@ def get_processed_logs(
     Filtros suportados:
     - is_anomaly: True/False
     - final_severity: LOW, MEDIUM, HIGH, CRITICAL
-    - start_time: timestamp ISO inicial
-    - end_time: timestamp ISO final
+    - event_name, user_name, source_ip: filtros parciais por string
+    - detector_type: zscore, iforest, rule
+    - start_time / end_time: intervalo de datas ISO
     - limit / offset: paginação eficiente
     """
     init_db(db_path)
-    query = "SELECT * FROM processed_logs WHERE 1=1"
-    params: List[Any] = []
-
-    if is_anomaly is not None:
-        query += " AND is_anomaly = ?"
-        params.append(1 if is_anomaly else 0)
-
-    if final_severity:
-        query += " AND final_severity = ?"
-        params.append(final_severity.upper())
-
-    if start_time:
-        query += " AND timestamp >= ?"
-        params.append(start_time)
-
-    if end_time:
-        query += " AND timestamp <= ?"
-        params.append(end_time)
-
-    query += " ORDER BY id DESC LIMIT ? OFFSET ?"
+    where_sql, params = _build_processed_logs_where(
+        is_anomaly=is_anomaly,
+        final_severity=final_severity,
+        event_name=event_name,
+        user_name=user_name,
+        source_ip=source_ip,
+        detector_type=detector_type,
+        start_time=start_time,
+        end_time=end_time,
+    )
+    query = f"SELECT * FROM processed_logs WHERE 1=1{where_sql} ORDER BY id DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
 
     with get_connection(db_path) as conn:
@@ -646,12 +726,13 @@ def get_db_stats(db_path: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
 
         # Total de anomalias
         cursor.execute("SELECT COUNT(*) AS total FROM anomalies")
-        total = cursor.fetchone()["total"]
+        total = int(cursor.fetchone()["total"])
 
         # Total de logs processados
         cursor.execute("SELECT COUNT(*) AS total_logs FROM processed_logs")
-        total_logs = cursor.fetchone()["total_logs"]
+        total_logs = int(cursor.fetchone()["total_logs"])
 
+        # Distribuição de severidade
         cursor.execute(
             """
             SELECT severity, COUNT(*) AS count
@@ -661,6 +742,7 @@ def get_db_stats(db_path: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
         )
         severity_dist = {r["severity"]: r["count"] for r in cursor.fetchall()}
 
+        # Top 5 eventos anômalos
         cursor.execute(
             """
             SELECT event_name, COUNT(*) AS count
@@ -672,9 +754,45 @@ def get_db_stats(db_path: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
         )
         top_events = {r["event_name"]: r["count"] for r in cursor.fetchall()}
 
+        # Top 5 IPs suspeitos
+        cursor.execute(
+            """
+            SELECT source_ip, COUNT(*) AS count
+            FROM anomalies
+            GROUP BY source_ip
+            ORDER BY count DESC
+            LIMIT 5
+            """
+        )
+        top_ips = {r["source_ip"]: r["count"] for r in cursor.fetchall()}
+
+        # Contagem por tipo de detector
+        cursor.execute("SELECT COUNT(*) AS count FROM processed_logs WHERE is_zscore_anomaly = 1")
+        zscore_count = cursor.fetchone()["count"]
+
+        cursor.execute("SELECT COUNT(*) AS count FROM processed_logs WHERE is_iforest_anomaly = 1")
+        iforest_count = cursor.fetchone()["count"]
+
+        cursor.execute("SELECT COUNT(*) AS count FROM processed_logs WHERE cloudtrail_rules_triggered != '[]' AND cloudtrail_rules_triggered IS NOT NULL")
+        rule_count = cursor.fetchone()["count"]
+
+        detector_dist = {
+            "ZScoreDetector": zscore_count,
+            "IsolationForestDetector": iforest_count,
+            "CloudTrailRulesEngine": rule_count,
+        }
+
+        # Taxa de anomalias (percentual)
+        denominator = total_logs if total_logs > 0 else (total if total > 0 else 1)
+        anomaly_rate = round((total / denominator) * 100, 2) if total_logs > 0 else (100.0 if total > 0 else 0.0)
+
     return {
         "total_anomalies": total,
         "total_processed_logs": total_logs,
+        "total_logs_analyzed": total_logs,
+        "anomaly_rate": anomaly_rate,
         "severity_distribution": severity_dist,
+        "detector_distribution": detector_dist,
         "top_anomalous_events": top_events,
+        "top_suspicious_ips": top_ips,
     }
