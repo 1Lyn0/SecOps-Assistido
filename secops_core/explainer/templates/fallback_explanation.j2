@@ -1,0 +1,18 @@
+> [!NOTE]
+> **Laudo gerado pelo Motor Analítico de Contingência SecOps** (Fallback Jinja2).
+
+#### 1) O que aconteceu (Resumo Simples)
+Detectada atividade com severidade **{{ event.severity or event.final_severity }}** na API **{{ event.event_name }}**, originada do IP **{{ event.source_ip }}** e associada ao usuário **{{ event.user_name }}**. O alerta envolve os motores **{{ (event.detectors_triggered or ['Regras']) | join(', ') if event.detectors_triggered is iterable and event.detectors_triggered is not string else event.detectors_triggered }}**.
+
+#### 2) Por que foi considerado anômalo
+{{ diagnostics }}
+
+#### 3) Risco Potencial / Mapeamento MITRE ATT&CK
+- **Tática**: {{ tatica }}
+- **Técnica**: {{ tecnica }}
+- **Risco**: Impacto direto de segurança na infraestrutura AWS associada ao perfil do evento.
+
+#### 4) Ação Recomendada (Ações Imediatas de Contenção & Remediação)
+{% for action in actions %}
+{{ loop.index }}. {{ action }}
+{% endfor %}

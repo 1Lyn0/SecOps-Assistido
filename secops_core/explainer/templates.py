@@ -1,41 +1,42 @@
-"""Templates Jinja2 para geração de laudos de explicabilidade de anomalias."""
+"""Sistema de templates Jinja2 para contextualização e explicação de alertas de SecOps."""
 
-from jinja2 import Template
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-EXPLAINER_PROMPT_TEMPLATE = """
-Você é um Especialista Sênior em Segurança da Informação e Resposta a Incidentes (SecOps Tier 3).
-Analise o evento de auditoria anômalo identificado abaixo e produza um laudo técnico conciso, objetivo e acionável.
+TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
-### Dados do Evento Anômalo:
-- **Event ID**: {{ event.event_id }}
-- **Timestamp**: {{ event.timestamp }}
-- **Ação / API**: {{ event.event_name }}
-- **Serviço**: {{ event.event_source or 'N/A' }}
-- **Identidade / Usuário**: {{ event.user_name }}
-- **IP de Origem**: {{ event.source_ip }}
-- **Severidade Estimada**: {{ event.severity }}
-- **Detectores que Acionaram o Alerta**: {{ event.detectors_triggered | join(', ') }}
-- **Score Máximo de Anomalia**: {{ event.max_score }}
-{% if event.details %}
-- **Detalhes Contextuais**: {{ event.details }}
-{% endif %}
+env = Environment(
+    loader=FileSystemLoader(str(TEMPLATES_DIR)),
+    autoescape=select_autoescape(disabled_extensions=("j2",)),
+    trim_blocks=True,
+    lstrip_blocks=True,
+)
 
----
+alert_template = env.get_template("alert_explanation.j2")
+fallback_template = env.get_template("fallback_explanation.j2")
 
-Estruture sua resposta estritamente no seguinte formato Markdown:
+# Retrocompatibilidade com imports existentes
+jinja_template = alert_template
 
-#### 1. Resumo Executivo
-Uma visão direta em 2 a 3 frases explicando o que aconteceu e o potencial impacto ao ambiente.
 
-#### 2. Diagnóstico Técnico & Causa Raiz
-Por que este comportamento foi considerado anômalo pelos detectores estatísticos/ML/regras.
+def render_alert_prompt(context: Dict[str, Any]) -> str:
+    """Renderiza o prompt contextualizado estruturado para o LLM via Jinja2."""
+    return alert_template.render(event=context)
 
-#### 3. Mapeamento MITRE ATT&CK
-- **Tática**: (Ex: Initial Access, Defense Evasion, Privilege Escalation, Exfiltration)
-- **Técnica**: (Identificador e nome da técnica, ex: T1562.001)
 
-#### 4. Ações Imediatas de Contenção & Remediação
-Três ações diretas que o analista de SecOps deve tomar imediatamente no ambiente cloud.
-""".strip()
-
-jinja_template = Template(EXPLAINER_PROMPT_TEMPLATE)
+def render_fallback_explanation(
+    context: Dict[str, Any],
+    diagnostics: str,
+    tatica: str,
+    tecnica: str,
+    actions: List[str],
+) -> str:
+    """Renderiza o laudo de contingência determinístico via Jinja2."""
+    return fallback_template.render(
+        event=context,
+        diagnostics=diagnostics,
+        tatica=tatica,
+        tecnica=tecnica,
+        actions=actions,
+    )

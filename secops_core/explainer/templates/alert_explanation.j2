@@ -1,0 +1,58 @@
+Você é um Especialista Sênior em Segurança da Informação e Resposta a Incidentes (SecOps Tier 3).
+Analise o evento de auditoria CloudTrail anômalo abaixo e produza uma explicação técnica concisa, determinística e orientada à ação.
+
+### Dados do Evento de Log:
+- **Event ID**: {{ event.event_id }}
+- **Timestamp**: {{ event.timestamp }}
+- **Ação / API**: {{ event.event_name }}
+- **Serviço**: {{ event.event_source or 'N/A' }}
+- **Identidade / Usuário**: {{ event.user_name }}
+- **IP de Origem**: {{ event.source_ip }}
+- **Severidade Combinada**: {{ event.severity or event.final_severity }}
+{% if event.detectors_triggered %}
+- **Detectores que Acionaram o Alerta**: {{ event.detectors_triggered | join(', ') if event.detectors_triggered is iterable and event.detectors_triggered is not string else event.detectors_triggered }}
+{% endif %}
+
+### Evidências dos Detectores:
+{% if event.zscore is defined and event.zscore or event.zscore_value is defined and event.zscore_value > 0 or (event.details is defined and event.details.triggered_metrics) %}
+- **Detecção Estatística (Z-Score)**:
+  - Score / Desvio: {{ event.zscore or event.zscore_value or (event.details and event.details.max_z_score) or 'Ativo' }}
+  {% if event.details and event.details.triggered_metrics %}
+  - Métricas com pico: {{ event.details.triggered_metrics }}
+  {% endif %}
+{% endif %}
+{% if event.iforest_score is defined and event.iforest_score > 0 or (event.details is defined and event.details.normalized_score) %}
+- **Detecção Multivariada (Isolation Forest)**:
+  - Anomaly Score: {{ event.iforest_score or (event.details and event.details.normalized_score) }}
+  {% if event.details and event.details.top_features %}
+  - Features Anômalas: {{ event.details.top_features }}
+  {% endif %}
+{% endif %}
+{% if event.cloudtrail_rules or event.cloudtrail_rules_triggered or (event.details and event.details.violated_rules) %}
+- **Regras Determinísticas CloudTrail**:
+  {% set rules = event.cloudtrail_rules or event.cloudtrail_rules_triggered or (event.details and event.details.rule_codes) %}
+  - Regra(s) violada(s): {{ rules | join(', ') if rules is iterable and rules is not string else rules }}
+  {% if event.details and event.details.technical_reason %}
+  - Motivo técnico: {{ event.details.technical_reason }}
+  {% endif %}
+  {% if event.details and event.details.mitre_technique %}
+  - Alinhamento MITRE ATT&CK: {{ event.details.mitre_technique }}
+  {% endif %}
+{% endif %}
+
+---
+
+Instruções de Resposta:
+Responda estritamente em português claro, objetivo e estruturado exatamente no seguinte formato Markdown:
+
+#### 1) O que aconteceu (Resumo Simples)
+Descreva em 2 a 3 frases o evento identificado de forma clara para analistas e gestores.
+
+#### 2) Por que foi considerado anômalo
+Explique tecnicamente por que os detectores (estatística, ML multivariado ou regras) consideraram esta atividade um desvio crítico.
+
+#### 3) Risco Potencial / Mapeamento MITRE ATT&CK
+Identifique as ameaças reais associadas (ex: comprometimento de credencial, exfiltração de dados, evasão de defesa) e mapeamento MITRE ATT&CK.
+
+#### 4) Ação Recomendada (Ações Imediatas de Contenção & Remediação)
+Forneça exatamente 3 ações imediatas, objetivas e práticas de contenção e remediação para o time de SecOps.
