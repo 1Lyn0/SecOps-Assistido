@@ -5,7 +5,7 @@ from reportlab.lib import colors
 from reportlab.lib.units import inch
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, KeepTogether, HRFlowable
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, KeepTogether, HRFlowable, Preformatted
 )
 from reportlab.pdfgen import canvas
 
@@ -31,11 +31,11 @@ class NumberedCanvas(canvas.Canvas):
         self.setFont("Helvetica", 8)
         self.setFillColor(colors.HexColor("#64748b"))
         
-        # Don't draw running header/footer on cover page (page 1)
+        # Oculta cabeçalho e rodapé na capa (página 1)
         if self._pageNumber > 1:
             # Header
-            self.drawString(54, 11 * inch - 36, "SecOps Assistido — Guia Técnico de Arquitetura e Código")
-            self.drawRightString(8.5 * inch - 54, 11 * inch - 36, "Mãos na Tech | SecOps")
+            self.drawString(54, 11 * inch - 36, "SecOps Assistido — Especificação Técnica, Tecnologias e Código")
+            self.drawRightString(8.5 * inch - 54, 11 * inch - 36, "Mãos na Tech | MAO 11-18")
             self.setStrokeColor(colors.HexColor("#e2e8f0"))
             self.setLineWidth(0.5)
             self.line(54, 11 * inch - 42, 8.5 * inch - 54, 11 * inch - 42)
@@ -60,7 +60,7 @@ def build_pdf(filename="SecOps_Assistido_Documentacao_Completa.pdf"):
 
     styles = getSampleStyleSheet()
     
-    # Custom palettes
+    # Paleta de cores corporativa
     c_primary = colors.HexColor("#0f172a")     # Slate 900
     c_secondary = colors.HexColor("#1e293b")   # Slate 800
     c_accent = colors.HexColor("#0284c7")      # Sky 600
@@ -69,13 +69,13 @@ def build_pdf(filename="SecOps_Assistido_Documentacao_Completa.pdf"):
     c_dark_gray = colors.HexColor("#334155")
     c_code_bg = colors.HexColor("#f1f5f9")
     
-    # Custom Typography Styles
+    # Estilos Tipográficos
     title_style = ParagraphStyle(
         'CoverTitle',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=26,
-        leading=32,
+        fontSize=24,
+        leading=30,
         textColor=c_primary,
         spaceAfter=10
     )
@@ -84,18 +84,18 @@ def build_pdf(filename="SecOps_Assistido_Documentacao_Completa.pdf"):
         'CoverSubtitle',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=13,
-        leading=18,
+        fontSize=12,
+        leading=16,
         textColor=colors.HexColor("#475569"),
-        spaceAfter=25
+        spaceAfter=20
     )
     
     meta_style = ParagraphStyle(
         'CoverMeta',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=10,
-        leading=14,
+        fontSize=9.5,
+        leading=13,
         textColor=colors.HexColor("#64748b")
     )
     
@@ -103,8 +103,8 @@ def build_pdf(filename="SecOps_Assistido_Documentacao_Completa.pdf"):
         'Heading1_Custom',
         parent=styles['Heading1'],
         fontName='Helvetica-Bold',
-        fontSize=16,
-        leading=20,
+        fontSize=15,
+        leading=19,
         textColor=c_primary,
         spaceBefore=16,
         spaceAfter=8,
@@ -115,8 +115,8 @@ def build_pdf(filename="SecOps_Assistido_Documentacao_Completa.pdf"):
         'Heading2_Custom',
         parent=styles['Heading2'],
         fontName='Helvetica-Bold',
-        fontSize=12,
-        leading=16,
+        fontSize=11.5,
+        leading=15,
         textColor=c_accent,
         spaceBefore=12,
         spaceAfter=6,
@@ -127,20 +127,20 @@ def build_pdf(filename="SecOps_Assistido_Documentacao_Completa.pdf"):
         'Body_Custom',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=9.5,
-        leading=14,
+        fontSize=9,
+        leading=13.5,
         textColor=c_dark_gray,
-        spaceAfter=8
+        spaceAfter=6
     )
 
     bullet_style = ParagraphStyle(
         'Bullet_Custom',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=9,
-        leading=13,
+        fontSize=8.5,
+        leading=12.5,
         textColor=c_dark_gray,
-        leftIndent=15,
+        leftIndent=14,
         spaceAfter=4
     )
 
@@ -148,21 +148,21 @@ def build_pdf(filename="SecOps_Assistido_Documentacao_Completa.pdf"):
         'CodeBlock',
         parent=styles['Normal'],
         fontName='Courier',
-        fontSize=8,
-        leading=11,
+        fontSize=7.5,
+        leading=10.5,
         textColor=colors.HexColor("#0f172a"),
         backColor=c_code_bg,
-        borderPadding=6,
+        borderPadding=5,
         spaceBefore=4,
-        spaceAfter=8
+        spaceAfter=6
     )
     
     callout_style = ParagraphStyle(
         'CalloutText',
         parent=styles['Normal'],
         fontName='Helvetica-Oblique',
-        fontSize=9,
-        leading=13,
+        fontSize=8.5,
+        leading=12.5,
         textColor=colors.HexColor("#0369a1")
     )
     
@@ -170,8 +170,8 @@ def build_pdf(filename="SecOps_Assistido_Documentacao_Completa.pdf"):
         'TableCell',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=8.5,
-        leading=11,
+        fontSize=8,
+        leading=10.5,
         textColor=c_dark_gray
     )
 
@@ -179,38 +179,38 @@ def build_pdf(filename="SecOps_Assistido_Documentacao_Completa.pdf"):
         'TableHeader',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=9,
-        leading=12,
+        fontSize=8.5,
+        leading=11,
         textColor=colors.white
     )
 
     story = []
 
     # ==================== CAPA / COVER ====================
-    story.append(Spacer(1, 40))
-    story.append(HRFlowable(width="100%", thickness=5, color=c_accent, spaceBefore=0, spaceAfter=20))
+    story.append(Spacer(1, 30))
+    story.append(HRFlowable(width="100%", thickness=4, color=c_accent, spaceBefore=0, spaceAfter=16))
     story.append(Paragraph("SecOps Assistido por IA", title_style))
-    story.append(Paragraph("Guia Técnico Completo de Arquitetura, Código e Ferramentas", subtitle_style))
+    story.append(Paragraph("Guia Técnico Completo de Arquitetura, Tecnologias, Instruções e Módulos", subtitle_style))
     story.append(Paragraph(
-        "<b>Auditoria de Segurança Inteligente:</b> Ingestão Canônica LGMS, Ensemble de Detectores "
-        "(Z-Score, Isolation Forest & Regras Determinísticas CloudTrail), Explicabilidade com LLMs, "
-        "Persistência SQLite e Visualização Integrada.",
+        "<b>Auditoria Inteligente em Cloud (AWS CloudTrail):</b> Ingestão Canônica LGMS, Ensemble Híbrido "
+        "(Z-Score, Isolation Forest & Regras Determinísticas), Explicabilidade com LLMs Locais (Ollama & Jinja2), "
+        "Persistência SQLite em modo WAL, API REST FastAPI e Dashboard Streamlit.",
         body_style
     ))
-    story.append(Spacer(1, 25))
+    story.append(Spacer(1, 18))
     
     meta_box_data = [
         [
             Paragraph("<b>Projeto:</b> SecOps-Assistido", meta_style),
-            Paragraph("<b>Time:</b> Mãos na Tech", meta_style)
+            Paragraph("<b>Time:</b> Mãos na Tech (MAO)", meta_style)
         ],
         [
-            Paragraph("<b>Tarefas Concluídas:</b> MAO-11, MAO-12, MAO-13", meta_style),
+            Paragraph("<b>Tarefas Integradas:</b> MAO-11, 12, 13, 14, 16, 17 e 18", meta_style),
             Paragraph("<b>Data de Geração:</b> Novembro de 2026", meta_style)
         ],
         [
-            Paragraph("<b>Linguagem:</b> Python 3.14 (Virtualenv)", meta_style),
-            Paragraph("<b>Status da Suíte:</b> 47 testes 100% aprovados", meta_style)
+            Paragraph("<b>Linguagem & Runtime:</b> Python 3.14 (Virtualenv)", meta_style),
+            Paragraph("<b>Cobertura de Testes:</b> 63 testes (100% de sucesso)", meta_style)
         ]
     ]
     t_meta = Table(meta_box_data, colWidths=[250, 250])
@@ -218,17 +218,16 @@ def build_pdf(filename="SecOps_Assistido_Documentacao_Completa.pdf"):
         ('BACKGROUND', (0,0), (-1,-1), c_light),
         ('BOX', (0,0), (-1,-1), 1, c_border),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('PADDING', (0,0), (-1,-1), 8),
+        ('PADDING', (0,0), (-1,-1), 6),
     ]))
     story.append(t_meta)
-    story.append(Spacer(1, 30))
+    story.append(Spacer(1, 20))
     
-    # Box de Destaque Executivo
     callout_data = [[
         Paragraph(
-            "<b>Objetivo deste documento:</b> Fornecer ao desenvolvedor e analista de segurança uma visão "
-            "holística, profunda e prática de todo o funcionamento interno do projeto, detalhando a função "
-            "de cada módulo, arquivo, classe, algoritmo estatístico e ferramenta empregada no SecOps Assistido.",
+            "<b>Finalidade deste documento:</b> Detalhar exaustivamente todas as tecnologias, conceitos, "
+            "algoritmos, decisões de arquitetura e arquivos de código utilizados no desenvolvimento do SecOps Assistido, "
+            "apresentando as instruções de uso e demonstrando a correlação exata de cada componente do sistema.",
             callout_style
         )
     ]]
@@ -236,444 +235,453 @@ def build_pdf(filename="SecOps_Assistido_Documentacao_Completa.pdf"):
     t_callout.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#e0f2fe")),
         ('BOX', (0,0), (-1,-1), 1, colors.HexColor("#7dd3fc")),
-        ('PADDING', (0,0), (-1,-1), 10),
+        ('PADDING', (0,0), (-1,-1), 8),
     ]))
     story.append(t_callout)
     story.append(PageBreak())
 
-    # ==================== SEÇÃO 1: VISÃO GERAL & ARQUITETURA ====================
+    # ==================== CAPÍTULO 1: ARQUITETURA ====================
     story.append(Paragraph("1. Visão Geral e Arquitetura do Sistema", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=c_accent, spaceBefore=2, spaceAfter=10))
+    story.append(HRFlowable(width="100%", thickness=1, color=c_accent, spaceBefore=2, spaceAfter=8))
     
     story.append(Paragraph(
-        "O <b>SecOps Assistido</b> é uma plataforma moderna de automação de operações de segurança e triagem "
-        "inteligente de incidentes. O sistema foi concebido para resolver o problema clássico de fadiga de alertas "
-        "(<i>alert fatigue</i>) em ambientes de nuvem (especificamente AWS CloudTrail), onde milhões de eventos de logs "
-        "são gerados diariamente.",
+        "O <b>SecOps Assistido</b> foi construído para resolver o problema clássico de <i>alert fatigue</i> "
+        "(fadiga de alertas) em centros de operações de segurança (SOC), analisando eventos complexos de auditoria "
+        "do AWS CloudTrail. Em vez de depender apenas de assinaturas estáticas ou modelos de caixa preta, a solução "
+        "adota uma <b>abordagem híbrida em ensemble</b>.",
         body_style
     ))
     story.append(Paragraph(
-        "Para atingir alta precisão com baixíssima taxa de falsos positivos, o projeto adota uma <b>abordagem híbrida "
-        "em ensemble</b>: combinando regras heurísticas determinísticas, análise estatística volumétrica univariada "
-        "(Z-Score) e aprendizado de máquina multivariado não supervisionado (Isolation Forest). Adicionalmente, grandes "
-        "modelos de linguagem (LLMs) são integrados para traduzir eventos técnicos críticos em laudos de fácil compreensão.",
+        "O fluxo de processamento é dividido em 6 camadas funcionais integradas:",
         body_style
     ))
-    
-    story.append(Paragraph("As 6 Camadas do Pipeline de Detecção", h2_style))
     
     layers_data = [
-        [Paragraph("<b>Camada</b>", table_header_style), Paragraph("<b>Componente Principal</b>", table_header_style), Paragraph("<b>Responsabilidade</b>", table_header_style)],
+        [Paragraph("<b>Camada</b>", table_header_style), Paragraph("<b>Módulos Principais</b>", table_header_style), Paragraph("<b>Responsabilidade Técnica</b>", table_header_style)],
         [
             Paragraph("1. Ingestão & Simulação", table_cell_style),
-            Paragraph("<code>generator.py</code><br/><code>logs_simulados.jsonl</code>", table_cell_style),
-            Paragraph("Produção de logs sintéticos de CloudTrail com cenários reais de ataque (exfiltração, evasão, brute force, etc.).", table_cell_style)
+            Paragraph("<code>generator.py</code><br/><code>data/*.jsonl</code>", table_cell_style),
+            Paragraph("Geração de eventos sintéticos realistas de CloudTrail com cenários de ataque (exfiltração, evasão, força bruta, root).", table_cell_style)
         ],
         [
             Paragraph("2. Modelagem LGMS", table_cell_style),
-            Paragraph("<code>lgms.py</code>", table_cell_style),
-            Paragraph("Validação canônica via Pydantic, parser tolerante a falhas (streaming) e extração de matriz de features normalizada.", table_cell_style)
+            Paragraph("<code>secops_core/lgms.py</code>", table_cell_style),
+            Paragraph("Validação canônica via Pydantic (CanonicalLog), parser resiliente em streaming e engenharia de features numéricas/temporais.", table_cell_style)
         ],
         [
-            Paragraph("3. Detecção Híbrida", table_cell_style),
+            Paragraph("3. Motores de Detecção", table_cell_style),
             Paragraph("<code>zscore_detector.py</code><br/><code>isolation_forest.py</code><br/><code>cloudtrail_rules.py</code>", table_cell_style),
-            Paragraph("Execução paralela dos 3 motores: detecção volumétrica por Z-Score (MAO-11), multivariada com Isolation Forest (MAO-12) e catálogo CloudTrail (MAO-13).", table_cell_style)
+            Paragraph("Ensemble de detecção: Z-Score para picos univariados, Isolation Forest para anomalias multivariadas e regras determinísticas CIS/MITRE.", table_cell_style)
         ],
         [
-            Paragraph("4. Consolidação", table_cell_style),
-            Paragraph("<code>engine.py</code>", table_cell_style),
-            Paragraph("Agrupamento de múltiplos alertas por <code>event_id</code>, deduplicação e cálculo de severidade máxima e score combinado.", table_cell_style)
+            Paragraph("4. Orquestração Pipeline", table_cell_style),
+            Paragraph("<code>secops_core/pipeline.py</code><br/><code>secops_core/detectors/engine.py</code>", table_cell_style),
+            Paragraph("Orquestração unificada ponta a ponta, regra de fusão ('qualquer detector' marca anomalia), justificativa técnica e severidade combinada.", table_cell_style)
         ],
         [
             Paragraph("5. Explicabilidade IA", table_cell_style),
-            Paragraph("<code>llm_explainer.py</code>", table_cell_style),
-            Paragraph("Geração de laudos executivos e recomendações de mitigação usando Ollama (Llama 3.2) com fallback offline robusto.", table_cell_style)
+            Paragraph("<code>templates/alert_explanation.j2</code><br/><code>ollama_client.py</code>", table_cell_style),
+            Paragraph("Contextualização rígida via Jinja2 e inferência local via Ollama (Llama 3.2), com Fallback Inteligente determinístico.", table_cell_style)
         ],
         [
-            Paragraph("6. Armazenamento & UI", table_cell_style),
+            Paragraph("6. Persistência & Consumo", table_cell_style),
             Paragraph("<code>db.py</code>, <code>api/main.py</code><br/><code>dashboard/app.py</code>", table_cell_style),
-            Paragraph("Persistência transacional SQLite em modo WAL, API REST com FastAPI e interface interativa Streamlit com gráficos e KPIs.", table_cell_style)
+            Paragraph("SQLite em modo WAL com índices analíticos, API REST completa em FastAPI (/health, /stats, /logs, /anomalies) e painel Streamlit.", table_cell_style)
         ],
     ]
-    t_layers = Table(layers_data, colWidths=[95, 120, 285])
+    t_layers = Table(layers_data, colWidths=[90, 130, 280])
     t_layers.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), c_secondary),
         ('GRID', (0,0), (-1,-1), 0.5, c_border),
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, c_light]),
-        ('PADDING', (0,0), (-1,-1), 5),
+        ('PADDING', (0,0), (-1,-1), 4.5),
     ]))
     story.append(t_layers)
-    story.append(Spacer(1, 14))
+    story.append(Spacer(1, 10))
 
-    # ==================== SEÇÃO 2: STACK & FERRAMENTAS ====================
-    story.append(Paragraph("2. Ferramentas, Bibliotecas e Tecnologias Empregadas", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=c_accent, spaceBefore=2, spaceAfter=10))
-    
-    tools_data = [
-        [Paragraph("<b>Tecnologia / Pacote</b>", table_header_style), Paragraph("<b>Versão / Origem</b>", table_header_style), Paragraph("<b>Aplicação no Projeto</b>", table_header_style)],
+    # ==================== CAPÍTULO 2: TABELA MESTRA ====================
+    story.append(Paragraph("2. Tabela Mestra de Tecnologias, Assuntos e Local de Aplicação", h1_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=c_accent, spaceBefore=2, spaceAfter=8))
+    story.append(Paragraph(
+        "A tabela a seguir consolida todas as tecnologias, bibliotecas, padrões e disciplinas de segurança "
+        "empregados no projeto, especificando exatamente a finalidade e o arquivo onde foram utilizados:",
+        body_style
+    ))
+
+    master_tech_data = [
+        [Paragraph("<b>Tecnologia / Assunto</b>", table_header_style), Paragraph("<b>Versão / Conceito</b>", table_header_style), Paragraph("<b>Finalidade no SecOps Assistido</b>", table_header_style), Paragraph("<b>Onde foi Utilizado (Arquivo)</b>", table_header_style)],
         [
             Paragraph("<b>Python</b>", table_cell_style),
             Paragraph("3.14.9", table_cell_style),
-            Paragraph("Runtime principal da aplicação com tipagem moderna (Type Hints, Dataclasses).", table_cell_style)
+            Paragraph("Linguagem central com tipagem forte, orientação a objetos e funções assíncronas.", table_cell_style),
+            Paragraph("Todo o repositório", table_cell_style)
         ],
         [
             Paragraph("<b>Scikit-Learn</b>", table_cell_style),
-            Paragraph("1.9.1", table_cell_style),
-            Paragraph("Algoritmo <code>IsolationForest</code> para detecção não supervisionada e <code>StandardScaler</code> para normalização.", table_cell_style)
+            Paragraph("1.9.1 (ML)", table_cell_style),
+            Paragraph("Modelo <code>IsolationForest</code> para detecção multivariada e <code>StandardScaler</code> para escalonamento.", table_cell_style),
+            Paragraph("<code>secops_core/detectors/isolation_forest.py</code>", table_cell_style)
         ],
         [
             Paragraph("<b>NumPy & Pandas</b>", table_cell_style),
             Paragraph("2.5.4 / 3.1.1", table_cell_style),
-            Paragraph("Cálculo estatístico vetorizado, manipulação de matrizes de features e agregação de dados de logs.", table_cell_style)
+            Paragraph("Transformações vetorizadas, séries temporais, matrizes numéricas e cálculo do Z-Score.", table_cell_style),
+            Paragraph("<code>secops_core/lgms.py</code><br/><code>secops_core/detectors/zscore_detector.py</code>", table_cell_style)
         ],
         [
-            Paragraph("<b>Pydantic & Settings</b>", table_cell_style),
-            Paragraph("2.14.3 / 2.16.2", table_cell_style),
-            Paragraph("Validação canônica estrita dos eventos de log e gerenciamento de configurações via variáveis de ambiente (.env).", table_cell_style)
+            Paragraph("<b>Pydantic v2</b>", table_cell_style),
+            Paragraph("2.14.3", table_cell_style),
+            Paragraph("Schemas canônicos de logs, validação de campos, contratos de API e modelos de alerta.", table_cell_style),
+            Paragraph("<code>secops_core/lgms.py</code><br/><code>api/schemas.py</code>, <code>detectors/base.py</code>", table_cell_style)
         ],
         [
-            Paragraph("<b>SQLite 3</b>", table_cell_style),
-            Paragraph("Nativo (WAL mode)", table_cell_style),
-            Paragraph("Armazenamento local transacional de alta velocidade com índices em <code>event_id</code>, <code>severity</code> e <code>timestamp</code>.", table_cell_style)
+            Paragraph("<b>Pydantic-Settings</b>", table_cell_style),
+            Paragraph("2.16.2", table_cell_style),
+            Paragraph("Gerenciamento centralizado de configurações e limiares via variáveis de ambiente (.env).", table_cell_style),
+            Paragraph("<code>secops_core/config.py</code>", table_cell_style)
+        ],
+        [
+            Paragraph("<b>Jinja2</b>", table_cell_style),
+            Paragraph("3.1.6", table_cell_style),
+            Paragraph("Templates determinísticos para contextualização de prompts de LLM e laudos forenses.", table_cell_style),
+            Paragraph("<code>secops_core/explainer/templates/</code><br/><code>secops_core/explainer/templates.py</code>", table_cell_style)
+        ],
+        [
+            Paragraph("<b>Ollama & Llama 3.2</b>", table_cell_style),
+            Paragraph("Local LLM", table_cell_style),
+            Paragraph("Inferência de IA generativa 100% local para triagem de alertas críticos sem vazamento de dados.", table_cell_style),
+            Paragraph("<code>secops_core/explainer/ollama_client.py</code>", table_cell_style)
+        ],
+        [
+            Paragraph("<b>HTTPX</b>", table_cell_style),
+            Paragraph("0.28.1", table_cell_style),
+            Paragraph("Cliente HTTP assíncrono/síncrono para integração com o Ollama local e healthchecks.", table_cell_style),
+            Paragraph("<code>secops_core/explainer/ollama_client.py</code>", table_cell_style)
+        ],
+        [
+            Paragraph("<b>SQLite 3 (WAL Mode)</b>", table_cell_style),
+            Paragraph("Nativo SQL", table_cell_style),
+            Paragraph("Persistência relacional transacional, modo WAL, índices de alta performance e cláusulas UPSERT.", table_cell_style),
+            Paragraph("<code>secops_core/db.py</code><br/><code>data/secops.db</code>", table_cell_style)
         ],
         [
             Paragraph("<b>FastAPI & Uvicorn</b>", table_cell_style),
             Paragraph("0.162.0 / 0.54.0", table_cell_style),
-            Paragraph("API REST assíncrona expondo rotas de ingestão, consulta de anomalias, métricas e explicabilidade.", table_cell_style)
+            Paragraph("Backend RESTful expondo /health, /stats, /logs, /anomalies, /explain e Swagger /docs.", table_cell_style),
+            Paragraph("<code>api/main.py</code><br/><code>api/schemas.py</code>", table_cell_style)
         ],
         [
-            Paragraph("<b>Streamlit</b>", table_cell_style),
-            Paragraph("1.67.0", table_cell_style),
-            Paragraph("Dashboard web visual para analistas de SOC com filtros, gráficos interativos e visualização de alertas.", table_cell_style)
+            Paragraph("<b>Streamlit & Altair</b>", table_cell_style),
+            Paragraph("1.67.0 / 6.3.0", table_cell_style),
+            Paragraph("Painel web operacional para SOC com KPIs de severidade, filtros e visualização de alertas.", table_cell_style),
+            Paragraph("<code>dashboard/app.py</code>", table_cell_style)
         ],
         [
             Paragraph("<b>Pytest</b>", table_cell_style),
             Paragraph("9.2.0", table_cell_style),
-            Paragraph("Framework de testes automatizados com cobertura completa de regras, modelos e integração.", table_cell_style)
+            Paragraph("Framework de testes automatizados com 63 testes unitários e de integração (100% de sucesso).", table_cell_style),
+            Paragraph("<code>tests/*.py</code>", table_cell_style)
+        ],
+        [
+            Paragraph("<b>ReportLab</b>", table_cell_style),
+            Paragraph("5.1.0", table_cell_style),
+            Paragraph("Geração programática de relatórios técnicos em PDF com numeração e estilos corporativos.", table_cell_style),
+            Paragraph("<code>generate_pdf_docs.py</code>", table_cell_style)
+        ],
+        [
+            Paragraph("<b>MITRE ATT&CK</b>", table_cell_style),
+            Paragraph("Framework SecOps", table_cell_style),
+            Paragraph("Mapeamento de ameaças: T1562.001 (Evasão), T1098 (IAM), T1078 (Root), T1110 (Brute Force).", table_cell_style),
+            Paragraph("<code>secops_core/detectors/cloudtrail_rules.py</code>", table_cell_style)
+        ],
+        [
+            Paragraph("<b>CIS AWS Benchmark</b>", table_cell_style),
+            Paragraph("Conformidade Cloud", table_cell_style),
+            Paragraph("Regras rígidas para uso de conta Root, integridade de trilhas CloudTrail e restrições S3.", table_cell_style),
+            Paragraph("<code>secops_core/detectors/cloudtrail_rules.py</code>", table_cell_style)
         ],
     ]
-    t_tools = Table(tools_data, colWidths=[110, 80, 310])
-    t_tools.setStyle(TableStyle([
+    t_master = Table(master_tech_data, colWidths=[90, 75, 185, 150])
+    t_master.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), c_secondary),
         ('GRID', (0,0), (-1,-1), 0.5, c_border),
-        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, c_light]),
-        ('PADDING', (0,0), (-1,-1), 5),
+        ('PADDING', (0,0), (-1,-1), 3.5),
     ]))
-    story.append(t_tools)
+    story.append(t_master)
     story.append(PageBreak())
 
-    # ==================== SEÇÃO 3: INGESTÃO E MODELAGEM LGMS ====================
-    story.append(Paragraph("3. Camada de Ingestão e Modelagem (LGMS)", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=c_accent, spaceBefore=2, spaceAfter=10))
-
-    story.append(Paragraph(
-        "A integridade de um motor de detecção depende diretamente da qualidade dos dados ingeridos. "
-        "O módulo <b>LGMS (Log Modeling & Schema)</b> em <code>secops_core/lgms.py</code> desempenha três papéis vitais:",
-        body_style
-    ))
-    
-    story.append(Paragraph("<b>1. Schemas Canônicos e Validação Tipada:</b>", body_style))
-    story.append(Paragraph(
-        "Define as classes <code>CanonicalLog</code> e <code>CanonicalUserIdentity</code> herdadas de <code>pydantic.BaseModel</code>. "
-        "O validador <code>parse_iso_timestamp</code> garante que timestamps com sufixo 'Z' ou offsets ISO-8601 sejam convertidos "
-        "com precisão para objetos datetime UTC, uniformizando logs de diferentes regiões da AWS.",
-        bullet_style
-    ))
-    
-    story.append(Paragraph("<b>2. Parser Resiliente com Tolerância a Corrupção:</b>", body_style))
-    story.append(Paragraph(
-        "A função <code>stream_logs()</code> consome arquivos JSONL em modo streaming, lendo linha por linha com baixíssimo "
-        "consumo de memória. Linhas corrompidas ou JSON malformado são capturados sem interromper o pipeline, preenchendo o "
-        "relatório quantitativo <code>ParsingSummary</code> (total de linhas, linhas válidas e erros registrados).",
-        bullet_style
-    ))
-    
-    story.append(Paragraph("<b>3. Engenharia de Features Estruturadas (Feature Engineering):</b>", body_style))
-    story.append(Paragraph(
-        "A função <code>extract_features()</code> transforma os logs brutos em uma matriz de variáveis ricas prontas para os detectores:",
-        bullet_style
-    ))
-    story.append(Paragraph("• <b>Temporais:</b> <code>hour</code> (0-23), <code>day_of_week</code> (0-6), <code>is_weekend</code> (0/1), <code>is_off_hours</code> (horários fora de 08h-19h ou fins de semana).", bullet_style))
-    story.append(Paragraph("• <b>Flags Categóricas:</b> <code>is_login</code>, <code>is_iam</code>, <code>is_trail_mgmt</code>, <code>is_s3</code>, <code>is_error</code> (falha ou código de erro presente).", bullet_style))
-    story.append(Paragraph("• <b>Reputação de Rede:</b> <code>is_suspicious_ip</code> (identifica prefixos Tor/VPN conhecidos como 185.220.*, 198.51.*).", bullet_style))
-    story.append(Paragraph("• <b>Volumetria & Escala:</b> <code>request_count</code>, <code>bytes_transferred</code> e <code>log_bytes_transferred</code> (transformação logarítmica log1p para redução de assimetria).", bullet_style))
-    story.append(Paragraph("• <b>Frequência de Contexto:</b> <code>ip_frequency</code> e <code>user_frequency</code> calculadas na janela do lote.", bullet_style))
-    story.append(Spacer(1, 12))
-
-    # ==================== SEÇÃO 4: DETECTORES (MAO-11, 12, 13) ====================
-    story.append(Paragraph("4. Motores de Detecção Implementados (MAOs 11, 12 e 13)", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=c_accent, spaceBefore=2, spaceAfter=10))
+    # ==================== CAPÍTULO 3: DETALHAMENTO DAS TAREFAS ====================
+    story.append(Paragraph("3. Detalhamento Técnico das Tarefas Implementadas", h1_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=c_accent, spaceBefore=2, spaceAfter=8))
 
     # MAO-11
-    story.append(Paragraph("4.1. MAO-11: Detector Estatístico Z-Score (<code>zscore_detector.py</code>)", h2_style))
+    story.append(Paragraph("3.1. MAO-11: Detector Estatístico Z-Score (secops_core/detectors/zscore_detector.py)", h2_style))
     story.append(Paragraph(
-        "O detector univariado Z-Score foi projetado para identificar picos repentinos de atividade volumétrica "
-        "(ataques de força bruta volumétrica, varredura em massa ou exfiltração agressiva de dados).",
+        "Focado em identificar picos de volumetria que se distanciam bruscamente da média histórica "
+        "calculando <b>Z = (x - &mu;) / &sigma;</b>. Analisa métricas univariadas e agregadas (ex: <code>request_count</code>, "
+        "<code>bytes_transferred</code>, <code>log_bytes_transferred</code>, <code>ip_frequency</code>, <code>user_frequency</code>).",
         body_style
     ))
-    story.append(Paragraph(
-        "<b>Fundamentação Matemática:</b><br/>"
-        "Calcula o desvio padrão normalizado para cada métrica $x$:<br/>"
-        "&nbsp;&nbsp;&nbsp;&nbsp;<b>Z = (x - &mu;) / &sigma;</b><br/>"
-        "onde &mu; é a média amostral e &sigma; é o desvio padrão da coluna.",
-        code_style
-    ))
-    story.append(Paragraph("<b>Principais Características e Proteções:</b>", body_style))
-    story.append(Paragraph("• <b>Divisão por Zero:</b> Caso &sigma; = 0 (quando todos os valores da série são idênticos), o código atribui com segurança Z = 0.0 sem disparar exceção.", bullet_style))
-    story.append(Paragraph("• <b>Configurabilidade:</b> O limiar (<code>threshold</code>) é parametrizável via construtor, variável de ambiente <code>ZSCORE_THRESHOLD</code> ou configuração global (default = 3.0).", bullet_style))
-    story.append(Paragraph("• <b>Imutabilidade dos Dados:</b> Métodos <code>calculate_zscore()</code> e <code>annotate_dataframe()</code> trabalham sobre cópias, preservando integralmente os dados originais.", bullet_style))
-    story.append(Paragraph("• <b>Mapeamento de Severidade:</b> |Z| &ge; 5.0 &rarr; CRITICAL | |Z| &ge; 4.0 &rarr; HIGH | |Z| &ge; 3.0 &rarr; MEDIUM.", bullet_style))
-    story.append(Spacer(1, 8))
+    story.append(Paragraph("• <b>Proteção &sigma; = 0:</b> Quando todos os valores são homogêneos, Z é fixado em 0.0 sem divisão por zero.", bullet_style))
+    story.append(Paragraph("• <b>Configurabilidade:</b> Limiar parametrizável via construtor ou variável de ambiente <code>ZSCORE_THRESHOLD</code>.", bullet_style))
+    story.append(Paragraph("• <b>Imutabilidade:</b> O DataFrame original é preservado intacto através de cópias defensivas.", bullet_style))
 
     # MAO-12
-    story.append(Paragraph("4.2. MAO-12: Detector Multivariado Isolation Forest (<code>isolation_forest.py</code>)", h2_style))
+    story.append(Paragraph("3.2. MAO-12: Detector Multivariado Isolation Forest (secops_core/detectors/isolation_forest.py)", h2_style))
     story.append(Paragraph(
-        "Ataques furtivos modernos raramente geram picos gigantescos isolados; comumente combinam horário atípico (madrugada), "
-        "origem incomum, ação sensível e volume moderado. O <b>Isolation Forest</b> isola observações particionando o "
-        "espaço amostral aleatoriamente através de hiperplanos: anomalias requerem significativamente menos partições para serem isoladas.",
+        "Detecta anomalias comportamentais complexas sem supervisão prévia. Ataques furtivos combinam pequenas alterações "
+        "em várias dimensões (madrugada + erro de chamada + ação incomum + IP externo).",
         body_style
     ))
-    story.append(Paragraph("<b>Fluxo Técnico do Modelo:</b>", body_style))
-    story.append(Paragraph("1. <b>Pré-processamento:</b> Converte variáveis categóricas em frequências e aplica <code>StandardScaler</code> em todas as dimensões numéricas para evitar que variáveis de magnitude grande dominem o modelo.", bullet_style))
-    story.append(Paragraph("2. <b>Treinamento & Inferência:</b> Ajusta <code>IsolationForest(contamination, n_estimators, random_state)</code> e gera predições nativas (-1 para anomalia, 1 para normal).", bullet_style))
-    story.append(Paragraph("3. <b>Normalização Contínua:</b> Transforma a <code>decision_function</code> em score no intervalo [0.0, 1.0], onde 1.0 representa a maior probabilidade de anomalia.", bullet_style))
-    story.append(Paragraph("4. <b>Reprodutibilidade:</b> Garantida através do parâmetro fixo <code>random_state=42</code>.", bullet_style))
-    story.append(Spacer(1, 8))
+    story.append(Paragraph("• <b>Pré-processamento:</b> Codificação de frequência para variáveis categóricas e escalonamento numérico via <code>StandardScaler</code>.", bullet_style))
+    story.append(Paragraph("• <b>Parametrização & Reprodutibilidade:</b> Suporte a <code>contamination</code>, <code>n_estimators</code> e <code>random_state=42</code> fixo.", bullet_style))
+    story.append(Paragraph("• <b>Saídas Ricas:</b> Retorna flag booleana <code>is_iforest_anomaly</code>, score normalizado contínuo [0.0, 1.0] e <code>decision_function</code>.", bullet_style))
 
     # MAO-13
-    story.append(Paragraph("4.3. MAO-13: Catálogo Modular de Regras CloudTrail (<code>cloudtrail_rules.py</code>)", h2_style))
+    story.append(Paragraph("3.3. MAO-13: Motor Modular de Regras CloudTrail (secops_core/detectors/cloudtrail_rules.py)", h2_style))
     story.append(Paragraph(
-        "Certos eventos configuram ameaças severas imediatas independentemente de frequência estatística. "
-        "Foi implementado um motor determinístico modular e extensível com 7 regras alinhadas às melhores práticas "
-        "do <b>CIS AWS Benchmark</b> e técnicas do <b>MITRE ATT&CK</b>:",
+        "Ameaças severas em nuvem não podem depender apenas de desvio estatístico. Foi desenvolvido um catálogo modular "
+        "de 7 regras determinísticas alinhadas ao CIS AWS e MITRE ATT&CK:",
         body_style
     ))
+    story.append(Paragraph("1. <code>RULE_TRAIL_TAMPERING</code> (CRITICAL - T1562.001): DeleteTrail, StopLogging, UpdateTrail.", bullet_style))
+    story.append(Paragraph("2. <code>RULE_ROOT_ACTIVITY</code> (CRITICAL - T1078.004): Chamadas executadas diretamente pela credencial Root.", bullet_style))
+    story.append(Paragraph("3. <code>RULE_IAM_PRIVILEGE_ESCALATION</code> (HIGH - T1098): PutUserPolicy, AttachUserPolicy, CreateAccessKey.", bullet_style))
+    story.append(Paragraph("4. <code>RULE_BRUTE_FORCE_CONSOLE</code> (HIGH - T1110): Falhas sucessivas de autenticação no ConsoleLogin.", bullet_style))
+    story.append(Paragraph("5. <code>RULE_SENSITIVE_S3_PUBLIC_ACCESS</code> (HIGH - T1530): Remoção de Block Public Access e alteração de ACLs.", bullet_style))
+    story.append(Paragraph("6. <code>RULE_UNAUTHORIZED_API_BURST</code> (MEDIUM - T1087): Erros AccessDenied e UnauthorizedOperation.", bullet_style))
+    story.append(Paragraph("7. <code>RULE_NETWORK_PERIMETER_TAMPERING</code> (MEDIUM - T1562.007): Alteração permissiva de Security Groups.", bullet_style))
+    story.append(Paragraph("• <b>Extensibilidade:</b> Permite acoplar novas classes herdadas de <code>BaseCloudTrailRule</code> via <code>register_rule()</code>.", bullet_style))
 
-    rules_table_data = [
-        [Paragraph("<b>Código da Regra</b>", table_header_style), Paragraph("<b>Severidade</b>", table_header_style), Paragraph("<b>Gatilho / Condição Técnica</b>", table_header_style), Paragraph("<b>MITRE ATT&CK</b>", table_header_style)],
-        [
-            Paragraph("<code>RULE_TRAIL_TAMPERING</code>", table_cell_style),
-            Paragraph("<font color='red'><b>CRITICAL</b></font>", table_cell_style),
-            Paragraph("Ações <code>DeleteTrail</code>, <code>StopLogging</code>, <code>UpdateTrail</code> (desativação de auditoria).", table_cell_style),
-            Paragraph("T1562.001 (Impair Defenses)", table_cell_style)
-        ],
-        [
-            Paragraph("<code>RULE_ROOT_ACTIVITY</code>", table_cell_style),
-            Paragraph("<font color='red'><b>CRITICAL</b></font>", table_cell_style),
-            Paragraph("Qualquer chamada efetuada diretamente pela credencial da conta Root (<code>userIdentity.type == 'Root'</code>).", table_cell_style),
-            Paragraph("T1078.004 (Cloud Root Account)", table_cell_style)
-        ],
-        [
-            Paragraph("<code>RULE_IAM_PRIVILEGE_ESCALATION</code>", table_cell_style),
-            Paragraph("<font color='orange'><b>HIGH</b></font>", table_cell_style),
-            Paragraph("Alterações de políticas: <code>PutUserPolicy</code>, <code>AttachUserPolicy</code>, criação de <code>AccessKey</code>.", table_cell_style),
-            Paragraph("T1098 (Account Manipulation)", table_cell_style)
-        ],
-        [
-            Paragraph("<code>RULE_BRUTE_FORCE_CONSOLE</code>", table_cell_style),
-            Paragraph("<font color='orange'><b>HIGH</b></font>", table_cell_style),
-            Paragraph("Falhas de login no Console AWS (<code>ConsoleLogin</code> com status <code>Failure</code> ou erro de auth).", table_cell_style),
-            Paragraph("T1110 (Brute Force)", table_cell_style)
-        ],
-        [
-            Paragraph("<code>RULE_SENSITIVE_S3_PUBLIC_ACCESS</code>", table_cell_style),
-            Paragraph("<font color='orange'><b>HIGH</b></font>", table_cell_style),
-            Paragraph("Exclusão de bloqueio público S3 (<code>DeleteBucketPublicAccessBlock</code>) ou <code>PutBucketAcl</code> permissiva.", table_cell_style),
-            Paragraph("T1530 (Data from Cloud Storage)", table_cell_style)
-        ],
-        [
-            Paragraph("<code>RULE_UNAUTHORIZED_API_BURST</code>", table_cell_style),
-            Paragraph("<b>MEDIUM</b>", table_cell_style),
-            Paragraph("Erros <code>AccessDenied</code> e <code>UnauthorizedOperation</code> recorrentes em enumeração de recursos.", table_cell_style),
-            Paragraph("T1087 (Permission Discovery)", table_cell_style)
-        ],
-        [
-            Paragraph("<code>RULE_NETWORK_PERIMETER_TAMPERING</code>", table_cell_style),
-            Paragraph("<b>MEDIUM</b>", table_cell_style),
-            Paragraph("Modificação de Security Groups (<code>AuthorizeSecurityGroupIngress</code>) ou exclusão de VPC Flow Logs.", table_cell_style),
-            Paragraph("T1562.007 (Disable Firewalls)", table_cell_style)
-        ],
-    ]
-    t_rules = Table(rules_table_data, colWidths=[130, 60, 195, 115])
-    t_rules.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), c_secondary),
-        ('GRID', (0,0), (-1,-1), 0.5, c_border),
-        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, c_light]),
-        ('PADDING', (0,0), (-1,-1), 4),
-    ]))
-    story.append(t_rules)
-    story.append(Spacer(1, 10))
+    # MAO-14
+    story.append(Paragraph("3.4. MAO-14: Unificação do Pipeline Híbrido e Persistência SQLite (secops_core/pipeline.py)", h2_style))
     story.append(Paragraph(
-        "<b>Extensibilidade Dinâmica:</b> O motor disponibiliza o método <code>engine.register_rule(CustomRule())</code>, "
-        "permitindo que novas assinaturas de ameaça sejam acopladas em tempo de execução sem modificar o núcleo do motor.",
+        "Orquestrador central que executa todo o fluxo de ponta a ponta: <code>logs_simulados.jsonl</code> &rarr; <code>LGMS</code> "
+        "&rarr; <code>ZScore + Isolation Forest + CloudTrail Rules</code> &rarr; <code>SQLite</code>.",
         body_style
     ))
+    story.append(Paragraph("• <b>Fusão de Decisão (Ensemble):</b> O evento é marcado como anomalia se qualquer um dos detectores o sinalizar.", bullet_style))
+    story.append(Paragraph("• <b>Cálculo de Severidade Combinada:</b> Consenso entre 2 ou mais detectores eleva automaticamente o alerta para no mínimo HIGH.", bullet_style))
+    story.append(Paragraph("• <b>Justificativa Técnica Estruturada:</b> Sintetiza o motivo de cada motor de detecção no campo <code>technical_justification</code>.", bullet_style))
+    story.append(Paragraph("• <b>Persistência Completa:</b> Grava todos os logs enriquecidos em <code>processed_logs</code> e as anomalias em <code>anomalies</code>.", bullet_style))
+    story.append(Paragraph("• <b>Interface CLI:</b> Executável no terminal via <code>python -m secops_core.pipeline --file ...</code> com opção de exportação JSON.", bullet_style))
+    story.append(Spacer(1, 4))
+
+    # MAO-16
+    story.append(Paragraph("3.5. MAO-16: Templates Jinja2 Estruturados (secops_core/explainer/templates/)", h2_style))
+    story.append(Paragraph(
+        "Para garantir que o modelo de linguagem local gere laudos concisos e sem alucinações, foi criado um sistema "
+        "estrito de templates em <code>secops_core/explainer/templates/alert_explanation.j2</code> e renderizador Python em <code>templates.py</code>.",
+        body_style
+    ))
+    story.append(Paragraph("• <b>Injeção Contextual:</b> Injeta dados do evento, métricas zscore, score iforest, regras disparadas e severidade.", bullet_style))
+    story.append(Paragraph("• <b>Estrutura Padronizada das 4 Seções Obrigatórias:</b>", bullet_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;<b>1) O que aconteceu (Resumo Simples)</b> — Visão executiva em 2 a 3 frases.", bullet_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;<b>2) Por que foi considerado anômalo</b> — Diagnóstico técnico do desvio estatístico/regra.", bullet_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;<b>3) Risco Potencial / Mapeamento MITRE ATT&CK</b> — Impacto real e táticas associadas.", bullet_style))
+    story.append(Paragraph("&nbsp;&nbsp;&nbsp;&nbsp;<b>4) Ação Recomendada (Contenção & Remediação)</b> — Exatamente 3 ações práticas e imediatas.", bullet_style))
+    story.append(Paragraph("• <b>Aderência a Diretrizes:</b> Eliminação total de concatenações de string hardcoded, operando 100% via Jinja2.", bullet_style))
+    story.append(Spacer(1, 4))
+
+    # MAO-17
+    story.append(Paragraph("3.6. MAO-17: Cliente Ollama Local e Fallback Resiliente (secops_core/explainer/ollama_client.py)", h2_style))
+    story.append(Paragraph(
+        "Implementa a classe <code>OllamaClient</code> para comunicação HTTP com a API local do Ollama "
+        "(<code>POST http://localhost:11434/api/generate</code> com <code>stream=False</code>) mantendo custo zero.",
+        body_style
+    ))
+    story.append(Paragraph("• <b>Healthcheck & Timeout:</b> Métodos <code>check_health()</code> e <code>is_alive()</code> com timeout configurável.", bullet_style))
+    story.append(Paragraph("• <b>Fallback Inteligente Jinja2:</b> Se o Ollama estiver desligado ou der timeout, o sistema ativa automaticamente o template de contingência <code>fallback_explanation.j2</code> sem lançar exceções não tratadas.", bullet_style))
+    story.append(Paragraph("• <b>Persistência no SQLite:</b> O método <code>explain_and_persist()</code> atualiza a coluna <code>ai_explanation</code> simultaneamente nas tabelas <code>processed_logs</code> e <code>anomalies</code>.", bullet_style))
+    story.append(Spacer(1, 4))
+
+    # MAO-18
+    story.append(Paragraph("3.7. MAO-18: Endpoints REST em FastAPI (api/main.py e api/schemas.py)", h2_style))
+    story.append(Paragraph(
+        "Expõe a camada de serviços através de uma API RESTful moderna, assíncrona e autodocumentada com contratos Pydantic estritos:",
+        body_style
+    ))
+    story.append(Paragraph("• <code>GET /health</code>: Retorna status da API, integridade do banco SQLite e conectividade com o Ollama local.", bullet_style))
+    story.append(Paragraph("• <code>GET /stats</code>: Resumo executivo com total analisado, total de anomalias, taxa percentual, distribuição por severidade, contagem por detector e top eventos/IPs.", bullet_style))
+    story.append(Paragraph("• <code>GET /logs</code>: Listagem paginada de logs processados com filtros combinados (<code>is_anomaly</code>, <code>severity</code>, <code>event_name</code>, <code>user</code>, <code>source_ip</code>, <code>detector_type</code>, <code>limit</code>, <code>offset</code>).", bullet_style))
+    story.append(Paragraph("• <code>GET /anomalies/{event_id}</code>: Detalhes completos de um alerta específico (scores e laudo IA) com retorno 404 apropriado se não encontrado.", bullet_style))
+    story.append(Paragraph("• <code>POST /anomalies/{event_id}/explain</code>: Dispara ou recupera laudo técnico via LLM com persistência no banco.", bullet_style))
+    story.append(Paragraph("• <code>POST /pipeline/run</code>: Disparo do pipeline de detecção sobre lote de logs com relatório quantitativo.", bullet_style))
+    story.append(Paragraph("• <b>Validação & Swagger:</b> Retornos HTTP estritos (200, 404, 422 para paginação inválida) e documentação interativa em <code>/docs</code>.", bullet_style))
     story.append(PageBreak())
 
-    # ==================== SEÇÃO 5: ORQUESTRAÇÃO & ENSEMBLE ====================
-    story.append(Paragraph("5. Orquestração Ensemble e Explicabilidade por IA", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=c_accent, spaceBefore=2, spaceAfter=10))
+    # ==================== CAPÍTULO 4: GUIA DE COMANDOS ====================
+    story.append(Paragraph("4. Guia Prático de Instruções e Comandos", h1_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=c_accent, spaceBefore=2, spaceAfter=8))
 
-    story.append(Paragraph("5.1. Orquestração no <code>DetectionEngine</code> (<code>engine.py</code>)", h2_style))
     story.append(Paragraph(
-        "O <code>DetectionEngine</code> coordena a execução simultânea dos três detectores. Quando múltiplos detectores "
-        "disparam para o mesmo <code>event_id</code>, a classe <code>ConsolidatedAnomaly</code> unifica as evidências:",
+        "Abaixo estão as instruções e comandos práticos para operar cada ferramenta do ecossistema SecOps Assistido "
+        "no ambiente Linux:",
         body_style
     ))
-    story.append(Paragraph("• <b>Elevação de Severidade:</b> Se 2 ou mais detectores concordam no alerta, a severidade mínima é elevada para <b>HIGH</b>.", bullet_style))
-    story.append(Paragraph("• <b>Consolidação de Scores:</b> Mantém o score máximo detectado e preserva os detalhes analíticos de cada detector individual.", bullet_style))
-    story.append(Paragraph("• <b>Ordenação por Prioridade:</b> Os alertas finais são automaticamente ordenados dos mais críticos para os de menor risco.", bullet_style))
-    story.append(Spacer(1, 10))
 
-    story.append(Paragraph("5.2. Módulo de Explicabilidade com LLM (<code>llm_explainer.py</code>)", h2_style))
-    story.append(Paragraph(
-        "Alertas técnicos puros muitas vezes são de difícil interpretação para gestores ou analistas N1 de segurança. "
-        "O <code>LLMExplainer</code> atua na camada analítica traduzindo os parâmetros do evento em um laudo pericial estruturado:",
-        body_style
-    ))
-    story.append(Paragraph("• <b>Integração com Ollama:</b> Conecta-se à API REST local do Ollama para inferência rápida com o modelo <b>Llama 3.2</b>.", bullet_style))
-    story.append(Paragraph("• <b>Fallback Offline Resiliente:</b> Se a instância do Ollama estiver indisponível ou offline, o sistema ativa automaticamente geradores baseados em templates determinísticos (<code>secops_core/explainer/templates.py</code>), garantindo que nenhum laudo fique em branco.", bullet_style))
-    story.append(Paragraph("• <b>Estrutura do Laudo:</b> Inclui Resumo Executivo, Análise Técnica de Risco, Alinhamento MITRE ATT&CK e Recomendações Imediatas de Mitigação.", bullet_style))
-    story.append(Spacer(1, 12))
+    cmd_box_1 = (
+        "# 1. Executar a Suíte Completa de Testes Automatizados (63 testes)\n"
+        ".venv/bin/pytest -v\n\n"
+        "# 2. Executar Testes Específicos por Módulo\n"
+        ".venv/bin/pytest tests/test_pipeline_hybrid.py -v   # MAO-14: Pipeline Híbrido\n"
+        ".venv/bin/pytest tests/test_jinja_templates.py -v    # MAO-16: Templates Jinja2\n"
+        ".venv/bin/pytest tests/test_ollama_client.py -v     # MAO-17: Cliente Ollama & Fallback\n"
+        ".venv/bin/pytest tests/test_api.py -v               # MAO-18: Endpoints REST FastAPI\n"
+        ".venv/bin/pytest tests/test_zscore_detector.py -v   # MAO-11: Detector Z-Score\n"
+        ".venv/bin/pytest tests/test_isolation_forest.py -v  # MAO-12: Isolation Forest\n"
+        ".venv/bin/pytest tests/test_cloudtrail_rules.py -v  # MAO-13: Regras CloudTrail"
+    )
+    story.append(Preformatted(cmd_box_1, code_style))
 
-    # ==================== SEÇÃO 6: PERSISTÊNCIA, API E UI ====================
-    story.append(Paragraph("6. Persistência, API REST e Interface Visual", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=c_accent, spaceBefore=2, spaceAfter=10))
+    cmd_box_2 = (
+        "# 3. Executar o Pipeline Híbrido de Detecção de Ponta a Ponta via CLI\n"
+        ".venv/bin/python3 -m secops_core.pipeline --file data/logs_simulados.jsonl\n\n"
+        "# 4. Executar o Pipeline com Geração de Laudos por IA para Eventos Críticos\n"
+        ".venv/bin/python3 -m secops_core.pipeline --file data/logs_simulados.jsonl --explain\n\n"
+        "# 5. Exportar Relatório Executivo em JSON\n"
+        ".venv/bin/python3 -m secops_core.pipeline --file data/logs_simulados.jsonl --output relatorio_execucao.json"
+    )
+    story.append(Preformatted(cmd_box_2, code_style))
 
-    story.append(Paragraph("6.1. Banco de Dados SQLite Otimizado (<code>secops_core/db.py</code>)", h2_style))
-    story.append(Paragraph(
-        "A camada de persistência utiliza SQLite 3 com configurações corporativas avançadas:",
-        body_style
-    ))
-    story.append(Paragraph("• <b>WAL Mode (Write-Ahead Logging):</b> Permite leituras concorrentes em alta velocidade enquanto operações de escrita ocorrem em background.", bullet_style))
-    story.append(Paragraph("• <b>Idempotência Estrita:</b> Cláusulas <code>INSERT OR IGNORE</code> baseadas na chave primária única <code>event_id</code> impedem a duplicação de alertas em reexecuções de pipelines.", bullet_style))
-    story.append(Paragraph("• <b>Índices Dedicados:</b> Índices em <code>idx_anomalies_timestamp</code>, <code>idx_anomalies_severity</code> e <code>idx_anomalies_scenario</code> garantem consultas paginadas e relatórios em tempo sub-milissegundo.", bullet_style))
-    story.append(Spacer(1, 8))
+    cmd_box_3 = (
+        "# 6. Iniciar o Servidor da API REST FastAPI (Swagger UI em http://localhost:8000/docs)\n"
+        ".venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload\n\n"
+        "# 7. Consultar Endpoints via Terminal (Exemplos cURL)\n"
+        "curl -s http://localhost:8000/health | jq .\n"
+        "curl -s http://localhost:8000/stats | jq .\n"
+        "curl -s 'http://localhost:8000/logs?severity=CRITICAL&limit=5' | jq .\n\n"
+        "# 8. Iniciar o Dashboard Interativo Streamlit (Interface SOC)\n"
+        ".venv/bin/streamlit run dashboard/app.py --server.port 8501"
+    )
+    story.append(Preformatted(cmd_box_3, code_style))
+    story.append(Spacer(1, 6))
 
-    story.append(Paragraph("6.2. Backend FastAPI (<code>api/main.py</code>)", h2_style))
-    story.append(Paragraph(
-        "A API RESTful expõe os seguintes endpoints padronizados:",
-        body_style
-    ))
-    story.append(Paragraph("• <code>GET /health</code>: Verificação de status e prontidão da aplicação.", bullet_style))
-    story.append(Paragraph("• <code>GET /stats</code>: Resumo consolidado do número de anomalias por severidade e detectores.", bullet_style))
-    story.append(Paragraph("• <code>POST /pipeline/run</code>: Dispara o pipeline de ingestão e detecção sobre um arquivo JSONL especificado.", bullet_style))
-    story.append(Paragraph("• <code>GET /anomalies</code>: Consulta paginada com suporte a filtros por severidade (CRITICAL, HIGH, etc.) e detector.", bullet_style))
-    story.append(Paragraph("• <code>GET /anomalies/{event_id}</code>: Detalhes aprofundados e evidências de uma anomalia específica.", bullet_style))
-    story.append(Paragraph("• <code>POST /anomalies/{event_id}/explain</code>: Solicitação sob demanda de laudo analítico via LLM.", bullet_style))
-    story.append(Spacer(1, 8))
-
-    story.append(Paragraph("6.3. Dashboard Streamlit (<code>dashboard/app.py</code>)", h2_style))
-    story.append(Paragraph(
-        "Interface web rica em <code>dashboard/app.py</code> que permite ao operador visualizar KPIs em tempo real, "
-        "distribuição de risco por severidade, filtros dinâmicos e inspeção dos laudos explicativos gerados por IA.",
-        body_style
-    ))
-    story.append(PageBreak())
-
-    # ==================== SEÇÃO 7: GUIA PRÁTICO & TESTES ====================
-    story.append(Paragraph("7. Validação, Testes Automatizados e Comandos Úteis", h1_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=c_accent, spaceBefore=2, spaceAfter=10))
+    # ==================== CAPÍTULO 5: MATRIZ DE TESTES ====================
+    story.append(Paragraph("5. Matriz de Qualidade e Cobertura de Testes Automatizados", h1_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=c_accent, spaceBefore=2, spaceAfter=8))
 
     story.append(Paragraph(
-        "A confiabilidade do código é comprovada por uma bateria rigorosa de testes unitários e de integração "
-        "desenvolvida em <b>Pytest</b>, totalizando <b>47 testes automatizados com 100% de aprovação</b>.",
+        "A integridade de todas as entregas é assegurada por <b>63 testes automatizados</b> executados "
+        "com <b>100% de sucesso</b>. A tabela abaixo sintetiza o escopo coberto por cada suíte:",
         body_style
     ))
 
     tests_summary_data = [
-        [Paragraph("<b>Arquivo de Teste</b>", table_header_style), Paragraph("<b>Foco / Escopo</b>", table_header_style), Paragraph("<b>Testes</b>", table_header_style), Paragraph("<b>Resultado</b>", table_header_style)],
+        [Paragraph("<b>Arquivo de Teste</b>", table_header_style), Paragraph("<b>Tarefa</b>", table_header_style), Paragraph("<b>Escopo e Critérios Verificados</b>", table_header_style), Paragraph("<b>Qtd</b>", table_header_style), Paragraph("<b>Status</b>", table_header_style)],
         [
-            Paragraph("<code>tests/test_zscore_detector.py</code>", table_cell_style),
-            Paragraph("Validação do Z-Score: distribuição normal, pico extremo, &sigma;=0, threshold via env/param, imutabilidade.", table_cell_style),
-            Paragraph("7", table_cell_style),
+            Paragraph("<code>tests/test_pipeline_hybrid.py</code>", table_cell_style),
+            Paragraph("MAO-14", table_cell_style),
+            Paragraph("Fluxo end-to-end, regra 'qualquer detector marca anomalia', fusão de severidade, justificativa técnica e CLI.", table_cell_style),
+            Paragraph("3", table_cell_style),
             Paragraph("<font color='green'><b>PASS</b></font>", table_cell_style)
         ],
         [
-            Paragraph("<code>tests/test_isolation_forest.py</code>", table_cell_style),
-            Paragraph("Treinamento/inferência, score contínuo, reprodutibilidade (seed 42), detecção multivariada e scaling.", table_cell_style),
+            Paragraph("<code>tests/test_jinja_templates.py</code>", table_cell_style),
+            Paragraph("MAO-16", table_cell_style),
+            Paragraph("Renderização Jinja2: combinações estatística, ML, regras e híbrida; verificação das 4 seções obrigatórias.", table_cell_style),
             Paragraph("5", table_cell_style),
             Paragraph("<font color='green'><b>PASS</b></font>", table_cell_style)
         ],
         [
-            Paragraph("<code>tests/test_cloudtrail_rules.py</code>", table_cell_style),
-            Paragraph("100% de precisão para cada uma das 7 regras CloudTrail, avaliação de logs e extensibilidade modular.", table_cell_style),
-            Paragraph("10", table_cell_style),
-            Paragraph("<font color='green'><b>PASS</b></font>", table_cell_style)
-        ],
-        [
-            Paragraph("<code>tests/test_detectors.py</code>", table_cell_style),
-            Paragraph("Testes de integração cruzada e retrocompatibilidade do motor de detecção.", table_cell_style),
+            Paragraph("<code>tests/test_ollama_client.py</code>", table_cell_style),
+            Paragraph("MAO-17", table_cell_style),
+            Paragraph("Mock HTTP do Ollama, acionamento automático de Fallback Jinja2 em falhas/timeout e persistência SQLite.", table_cell_style),
             Paragraph("4", table_cell_style),
             Paragraph("<font color='green'><b>PASS</b></font>", table_cell_style)
         ],
         [
             Paragraph("<code>tests/test_api.py</code>", table_cell_style),
-            Paragraph("Endpoints FastAPI (/health, /stats, /anomalies, /explain).", table_cell_style),
-            Paragraph("4", table_cell_style),
+            Paragraph("MAO-18", table_cell_style),
+            Paragraph("Endpoints /health, /stats, /logs com paginação e filtros combinados, /anomalies/{id}, status 404 e 422.", table_cell_style),
+            Paragraph("8", table_cell_style),
             Paragraph("<font color='green'><b>PASS</b></font>", table_cell_style)
         ],
         [
-            Paragraph("<code>tests/test_db.py</code>", table_cell_style),
-            Paragraph("Transações SQLite, índices, idempotência e consultas de performance.", table_cell_style),
+            Paragraph("<code>tests/test_zscore_detector.py</code>", table_cell_style),
+            Paragraph("MAO-11", table_cell_style),
+            Paragraph("Distribuição normal, pico extremo, proteção contra &sigma;=0, threshold via env/param e imutabilidade.", table_cell_style),
+            Paragraph("7", table_cell_style),
+            Paragraph("<font color='green'><b>PASS</b></font>", table_cell_style)
+        ],
+        [
+            Paragraph("<code>tests/test_isolation_forest.py</code>", table_cell_style),
+            Paragraph("MAO-12", table_cell_style),
+            Paragraph("Treino/inferência, score contínuo, reprodutibilidade (seed 42), ranking multivariado e scaling numérico.", table_cell_style),
             Paragraph("5", table_cell_style),
             Paragraph("<font color='green'><b>PASS</b></font>", table_cell_style)
         ],
         [
+            Paragraph("<code>tests/test_cloudtrail_rules.py</code>", table_cell_style),
+            Paragraph("MAO-13", table_cell_style),
+            Paragraph("100% de precisão para as 7 regras determinísticas CloudTrail, avaliação de logs e extensibilidade modular.", table_cell_style),
+            Paragraph("10", table_cell_style),
+            Paragraph("<font color='green'><b>PASS</b></font>", table_cell_style)
+        ],
+        [
+            Paragraph("<code>tests/test_db.py</code>", table_cell_style),
+            Paragraph("Core DB", table_cell_style),
+            Paragraph("Tabelas SQLite, modo WAL, índices analíticos, inserção em lote < 100ms e idempotência contra duplicatas.", table_cell_style),
+            Paragraph("5", table_cell_style),
+            Paragraph("<font color='green'><b>PASS</b></font>", table_cell_style)
+        ],
+        [
+            Paragraph("<code>tests/test_detectors.py</code>", table_cell_style),
+            Paragraph("Core Ens.", table_cell_style),
+            Paragraph("Integração cruzada dos detectores e validação de retrocompatibilidade do motor de consolidação.", table_cell_style),
+            Paragraph("4", table_cell_style),
+            Paragraph("<font color='green'><b>PASS</b></font>", table_cell_style)
+        ],
+        [
             Paragraph("<code>tests/test_lgms.py</code>", table_cell_style),
-            Paragraph("Parser streaming, tolerância a corrupção e extração de features.", table_cell_style),
+            Paragraph("LGMS", table_cell_style),
+            Paragraph("Parser streaming, tolerância a corrupção em JSONL e extração de features numéricas/temporais.", table_cell_style),
             Paragraph("3", table_cell_style),
             Paragraph("<font color='green'><b>PASS</b></font>", table_cell_style)
         ],
         [
-            Paragraph("<code>test_pipeline / generator / setup</code>", table_cell_style),
+            Paragraph("<code>tests/test_explainer.py</code>", table_cell_style),
+            Paragraph("Explainer", table_cell_style),
+            Paragraph("Renderização de prompt e contingência analítica offline.", table_cell_style),
+            Paragraph("2", table_cell_style),
+            Paragraph("<font color='green'><b>PASS</b></font>", table_cell_style)
+        ],
+        [
+            Paragraph("<code>tests/test_pipeline / generator / setup</code>", table_cell_style),
+            Paragraph("Infra", table_cell_style),
             Paragraph("Pipeline end-to-end, gerador sintético e configurações globais.", table_cell_style),
-            Paragraph("9", table_cell_style),
+            Paragraph("7", table_cell_style),
             Paragraph("<font color='green'><b>PASS</b></font>", table_cell_style)
         ],
         [
             Paragraph("<b>TOTAL GERAL</b>", table_cell_style),
+            Paragraph("<b>MAO 11-18</b>", table_cell_style),
             Paragraph("<b>Cobertura Completa do Sistema SecOps Assistido</b>", table_cell_style),
-            Paragraph("<b>47</b>", table_cell_style),
+            Paragraph("<b>63</b>", table_cell_style),
             Paragraph("<font color='green'><b>100% SUCESSO</b></font>", table_cell_style)
         ],
     ]
-    t_test_sum = Table(tests_summary_data, colWidths=[150, 240, 45, 65])
+    t_test_sum = Table(tests_summary_data, colWidths=[130, 50, 215, 35, 70])
     t_test_sum.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), c_secondary),
         ('GRID', (0,0), (-1,-1), 0.5, c_border),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('ROWBACKGROUNDS', (0,1), (-1,-2), [colors.white, c_light]),
         ('BACKGROUND', (0,-1), (-1,-1), colors.HexColor("#e2e8f0")),
-        ('PADDING', (0,0), (-1,-1), 4),
+        ('PADDING', (0,0), (-1,-1), 3),
     ]))
     story.append(t_test_sum)
-    story.append(Spacer(1, 14))
-
-    story.append(Paragraph("7.2. Guia Rápido de Comandos", h2_style))
-    story.append(Paragraph(
-        "Para executar e operar o projeto localmente no ambiente virtual:<br/>"
-        "• <b>Executar toda a suíte de testes:</b><br/>"
-        "&nbsp;&nbsp;&nbsp;&nbsp;<code>.venv/bin/pytest -v</code><br/><br/>"
-        "• <b>Rodar o pipeline de detecção sobre o arquivo de logs:</b><br/>"
-        "&nbsp;&nbsp;&nbsp;&nbsp;<code>.venv/bin/python3 -m secops_core.pipeline --file data/logs_simulados.jsonl</code><br/><br/>"
-        "• <b>Iniciar a API FastAPI (Swagger em http://localhost:8000/docs):</b><br/>"
-        "&nbsp;&nbsp;&nbsp;&nbsp;<code>.venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload</code><br/><br/>"
-        "• <b>Iniciar o Dashboard interativo Streamlit:</b><br/>"
-        "&nbsp;&nbsp;&nbsp;&nbsp;<code>.venv/bin/streamlit run dashboard/app.py</code>",
-        code_style
-    ))
     story.append(Spacer(1, 10))
 
-    # Box de Conclusão
+    # Box de Conclusão Final
     final_callout = [[
         Paragraph(
-            "<b>Conclusão:</b> Com a conclusão das tarefas MAO-11, MAO-12 e MAO-13, o SecOps Assistido atinge "
-            "um estado maduro, estável e pronto para produção, combinando a precisão cirúrgica de regras determinísticas, "
-            "a sensibilidade estatística do Z-Score e a inteligência contextual multivariada do Isolation Forest.",
+            "<b>Conclusão:</b> O ecossistema SecOps Assistido encontra-se completamente implementado, unificado "
+            "e testado. As tarefas MAO-11, MAO-12, MAO-13, MAO-14, MAO-16, MAO-17 e MAO-18 fornecem uma solução "
+            "robusta, de custo zero e pronta para ambientes de produção em larga escala.",
             callout_style
         )
     ]]
@@ -681,7 +689,7 @@ def build_pdf(filename="SecOps_Assistido_Documentacao_Completa.pdf"):
     t_fin.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#f0fdf4")),
         ('BOX', (0,0), (-1,-1), 1, colors.HexColor("#86efac")),
-        ('PADDING', (0,0), (-1,-1), 10),
+        ('PADDING', (0,0), (-1,-1), 8),
     ]))
     story.append(t_fin)
 
